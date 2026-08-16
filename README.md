@@ -72,10 +72,14 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 
 1. Supabase 프로젝트를 만들고 [supabase/schema.sql](supabase/schema.sql)을 SQL Editor에서 실행합니다.
 2. Authentication → Providers에서 Google을 활성화하고 Google Client ID·Secret을 입력합니다.
-3. Authentication → URL Configuration에 로컬 URL을 추가합니다.
+3. Authentication → URL Configuration에 로컬 개발 URL을 등록합니다.
 
    ```text
+   Site URL
    http://localhost:9050
+
+   Redirect URLs
+   http://localhost:9050/**
    ```
 
 4. Google Cloud OAuth 클라이언트 설정에 아래 값을 등록합니다.
@@ -89,6 +93,45 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
    ```
 
 현재 스키마는 사용자가 자신의 기록만 조회·생성·삭제할 수 있도록 RLS 정책을 설정합니다.
+
+## Vercel 배포
+
+GitHub 저장소를 Vercel에 Import하여 배포합니다. 이 프로젝트는 pnpm을 사용하므로 다음 설정을 확인합니다.
+
+```text
+Framework Preset: Vite
+Install Command: pnpm install
+Build Command: pnpm run build
+Output Directory: dist
+```
+
+Vercel의 **Settings → Environment Variables**에서 아래 환경 변수를 `Production` 및 `Preview` 환경에 등록합니다. 값은 로컬 `.env.local`과 동일한 Supabase 프로젝트의 공개 연결 정보입니다.
+
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+`VITE_`로 시작하는 값은 브라우저 번들에 포함됩니다. publishable key 이외의 비밀값, 특히 `service_role` 키는 등록하거나 배포하면 안 됩니다.
+
+배포 주소가 `https://your-project.vercel.app`일 때 Google 로그인이 동작하도록 다음 주소도 추가합니다.
+
+```text
+Supabase → Authentication → URL Configuration
+Site URL
+https://your-project.vercel.app
+
+Redirect URLs
+https://your-project.vercel.app/**
+
+Google Cloud OAuth client → Authorized JavaScript origins
+https://your-project.vercel.app
+
+Google Cloud OAuth client → Authorized redirect URIs
+https://your-project-ref.supabase.co/auth/v1/callback
+```
+
+Google Cloud의 redirect URI는 Vercel 앱 주소가 아니라 Supabase callback URL입니다. 로컬 개발을 계속하려면 기존 `http://localhost:9050` origin과 redirect URL도 유지합니다.
 
 ## 라우트
 
